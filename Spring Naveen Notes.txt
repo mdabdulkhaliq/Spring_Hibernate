@@ -1,0 +1,732 @@
+Spring Framework by (Naveen)
+Part 1:
+--------
+Rod Jhonson is the developer.
+Spring Organisation / Pivotal
+Initial Name is Interface21
+EJB's was like winter the next is Spring
+Springs are lightweight
+EJB is heavyweight
+AWT are heavyweight uses OS dependencies
+Swings are lightweight just needs jdk libraries
+Springs are lightweight not dependent on OS Libraries/Appserver just need spring jars
+EJBs need app server dependency hence heavyweight
+Spring just need jdk/jre
+Spring is loosely coupled can inject at runtime using runtime polymorphism, using interfaces
+and passing the implementor at runtime.
+
+Part2:
+-------
+To get Servlet capabilities we need to
+implement Servlet
+or Extend GenericServlet or HttpServlet
+We can simply write POJO classes. and Spring recommends to use Has-A instead of IS-A , and it will become lightweight i.e it will not be tightly coupled or dependent on the servlet classes
+Using Has-A we can change the dependency at runtime.
+Using runtime polymorphism and association(has-a relationship) spring is created.
+In normal java we can do it by passing runtime argument using command line.
+and referencing it with interface and assiging implemented classes.
+Interface i = Class.forName(args[0]);
+In Spring we can do it through XML using IOC container.
+Core and J2EE are IOC Containers
+MVC container is present in Web Container.
+
+Part3:
+-------
+
+IOC Containers:
+  Core: BeanFactory(interface) -> XmlBeanFactory(Implementation)
+  J2EE: ApplicationContext(interface) -> ConfigurableApplicationContext(Child interface) -> ClasspathXmlApplicationContext(Implementation)
+
+MVC Containers:
+  Web: WebApplicationContext(interface) -> WebApplicationContextUtils(factory class like DriverManager class to get connections)
+  This factory class will use internally an implementation of the interface to create an object.
+
+Containers will take care of
+Load xmls,
+create instances/beans,
+manage lifecycles,
+pass dynamic parameters to beans from xml files,
+Dependency injection.
+
+Class that has a main method is the Driver class.
+Class Test{
+  P S V M(S.. args[]){
+      new XmlBeanFactory();
+      new ClasspathXmlApplicationContext();
+      WebApplicationContextUtils.getObject();
+  }
+}
+
+For web applications
+Tomcat container class is the driver class in case of servlets.
+init  method =  code is written here, to initialize or start the container.
+service
+destory
+
+HelloWorld:
+1. Pojo Class
+2. Xml File
+3. Driver class
+
+Class Test{
+  public void hello(){
+  s.o.p("hello world");
+  }
+}
+
+spring.xml
+  dtd/xsd
+  <beans>
+    <bean class="Test" id="t"></bean>
+  </beans>
+
+  Class Client{
+    PSVM(s a[]){
+      Resource r = new ClasspathResource("spring.xml");
+      BeanFactory b = new XmlBeanFactory(r);
+      Test t = (Test)b.getBean("t");
+      t.hello();
+    }
+  }
+
+Part4:
+------
+Eclipse
+STS
+My Eclipse
+NetBeans
+
+Part5:
+-------
+Default object scope in spring is singleton.
+if we want new object for each request specify singleton="false" i.e prototype
+or scope="singleton" or scope="prototype"
+
+AppicationContext will create instances of class when the spring.xml is loaded
+whereas beanfactory container class will create objects when it is requested
+ApplicationContext is an eager container
+BeanFactory is lazy/on-demand container
+
+Part 6:
+--------
+IOC container has a SAX parser which will check for well-formed ness and validity of the spring XML document.
+In ApplicationContext if bean scope is singleton it will create objects at load time if not it will create a request time.
+In Beanfactory both singleton and prototype will create objects only on demand.
+
+Part 7:
+--------
+IOC Jars: Commons logging, Spring core, Spring beans, Spring Context
+spring beans jar has factory xml package which has dtd's for reference
+Spring FW can also instantiate classes with private constructors.
+
+Part8:
+-------
+Code to acccess private constructor and create instances using reflection.
+
+Class c = Class.forName("beans.TestClass");
+Constructor cons[] = c.getDeclaredConstructors();
+con[0].setAccessible(true);
+con[0].newInstance(null);
+
+Part9:
+-------
+IOC can supply any required parameters to POJo classes from XML through dependency injection
+There are two types of dependency injection using setter methods or parameterised constructors.
+
+Part 10:
+---------
+IOC container will take care of passing association data of an object at runtime using setter or constructor.
+IOC COntainer will create object using the default constructor of the classs. If there is no cons-args in the bean.
+Limitations of setter method injection is that only only value can be passed in for each setter, and duplicate values will not be accepted.
+we have to use constructor-arg for constructor based injection
+
+Part 11:
+---------
+If we have overloaded constructors we can resolve the constructor by using type attribute or index.
+if we declare two constructor args with same index it will use latest value and assign it, where as in case of setter based injection it will throw an exception.
+<property name="" value=""/>
+<constructor-args value="" type="" index="" ref=""/>
+We need not call setters of the object when declaring the bean, the values will be null
+but for constructor-args we need to call the parameterized constructor (think its mandatory)
+
+Part 12:
+---------
+using bean references
+<bean id="" class="">
+  <property name="" ref=""/>
+  <property name="">
+    <bean class="">
+      <property name="" value=""/>
+    </bean>
+  </property>
+</bean>
+
+Loading multiple xml files which has bean declarations
+String files[] = new String[]{"resources/car.xml","resources/engine.xml"};
+ApplicationContext ap = new ClasspathXmlApplicationContext(files);
+
+Part 13:
+---------
+<property name="">
+<list>
+  <value>aaa</value>
+  <value>bbb</value>
+</list>
+</property>
+
+<property name="">
+<list>
+  <ref bean="" />
+  <ref bean="" />
+</list>
+</property>
+
+
+Collections(I)
+  List  (I)
+    Vector
+      Stack
+    ArrayList
+    LinkedList
+
+  Set(I)
+    HashSet
+    TreeSet
+    LinkedHashSet
+
+  Map(I)
+    HashTable
+      Property
+    HashMap
+    TreeMap
+    LinkedHashMap
+
+Part14:
+--------
+    For List values inside property tag use, Spring will create a ArrayList by default
+    <list>
+      <value></value>
+      <value></value>
+    </list>
+
+    For Set use, Spring will create LinkedHashSet by default
+    <set>
+      <value></value>
+      <value></value>
+    </set>
+
+    For Map use, Spring will use LinkedHashMap by default
+    <map>
+      <entry key="" value=""/>
+      <entry key="" value=""/>
+    </map>
+
+Since spring creates arraylist by default to create vector
+we have to use the schema declaration xmlns:util="utilnamespace here"
+then use
+<util:list list-class="java.util.vector">
+</util:list>
+
+<util:set set-class="java.util.TreeSet">
+</util:set>
+
+<util:map map-class="java.util.HashTable">
+</util:list>
+
+Class Test{
+  private Property driver;
+}
+
+<beans>
+  <bean id="t" class="Test">
+    <property name="driver">
+      <props>
+        <prop key="">.....</prop>
+        <prop key="">.....</prop>
+      </props>
+    </property>
+  </bean>
+</beans>
+
+To read properties from external file
+<beans xmlns="bean-namespace here" xmlns:util="util-namespace here">
+  <property name="driver">
+    <util:property location="classpath:resources/driver.properties" />
+  </property>
+</beans>
+
+Part 15/16:
+---------
+Schema based configurations i.e to use util's we cannot use core container (BeanFactory) we have to use J2EE container (ApplicationContext)
+
+Part 17:
+--------
+Setter DI its not mandatory to set the properties.
+Dependency check will make setter DI mandatory.
+Use dependency-check attribute in the bean. default value is "none"
+values can be "none", "simple" for primitives, "objects" for objects, "all" for everything.
+
+Part 18:
+--------
+If we use dependency-check="simple" this will force all primitive types to be declared in bean definition. But if we dont want to set all and set only few of the primitives, this cannot happen
+hence its a drawback to over come this we can use @Required annotation which will make DI mandatory.
+Place this above setter or the variable.
+To activate this we need to declare the bean "RequiredAnnotationBeanPostProcessor" in the xml.
+
+Part 19/20/21:
+-----------
+If a class A depends on class B and when we create object for Class A container will first create object of class B and then object of class A. This can be specified by using
+depends-on attribute of the bean tag.
+<bean id="A" class="test.A" depends-on="B" />
+<bean id="B" class="test.B" depends-on="C" />
+<bean id="B" class="test.C" />
+Mutal dependencies are not possible, because of A depends on B and B depends on A, container will not know which object to create first.
+The container will by default create objects of those beans which are declare first the beans, i.e the in order in which they are declared.
+But we can use depends-on to specify if an object of another bean needs to be created first before creating the object of this class.
+
+These are available from Spring 2.5
+We can use P-namespace and C-namespace to perform setter DI and constructor DI resp. This will have an improved performance when loading xml, because it reduces not of xml tags
+Assuming a test class has a variableName and Car object
+//Setter injection using p namespace
+<beans xmlns:p="p-namespace here">
+  <bean id="t" class="beans.Test" p:variableName="value here" p:car-ref="c" />
+  <bean id="c" class="beans.Car" />
+</beans>
+
+//Constructor injection using c namespace
+<beans xmlns:c="c-namespace here">
+  <bean id="t" class="beans.Test" c:variableName="value here" c:car-ref="car" />
+  <bean id="car" class="beans.Car" />
+</beans>
+
+Needed jars asm, commons-logging, beans, context, core, expressions
+
+Part22/23:
+--------
+Autowiring is applicable only for Seconday types (Object and not primitive types)
+Based on class types or object names SF/IOC will automatically inject the beans.
+autowire="byType"(Setter DI), "byName"(Setter DI) , "constructor"(Constructor DI), "autodetect"(Setter or Constructor DI), "no"(default)
+we can apply this on bean tag or beans tag at the root level default-autowire=""
+autowire-candidate false parameter on bean tag will not allow IOC to autowire this i.e it will not be chosen for autowiring..
+byName will search byType and byName.
+For byName and byType it uses setter DI so we need to have setters configured for the object varialbles which we want to autowire.
+If we dont have setters we need to have constructors for setting the values to these objetc variables and we use autowire="constructor"
+constructor autowire will also use autowire byType, if we have 2 classes of same type we can use Qualifier or autowire-candidate
+if we mark a bean as autowire-candidate="false" then IOC will not consider this for DI.
+In case of Autodetect if class contains default contructor, parameterized constructor and setter then, it will create object using default constructor(no arg constructor),
+then will use setter DI. If it has only parameterized constructor and setters, then it has to create an object using constructor DI.
+byName we have to use same reference names in xml and the java class.
+
+Part 24:
+--------
+@Autowire will autowire byType deafult.
+If we have more than one bean then we use @Qualifier("qualifiername") @Qualifier(value="beanid") (Support from Spring 3)
+For Spring 3 IOC we need asm, beans, core, context, expressions , commonslogging
+To activiate these 2 annotations we need to declare the bean "AutowireAnnotationBeanPostProcessor"
+By annotations we need not have any setters or constructors for injection.
+
+Part25/26:
+-----------
+Stereotype Classes
+  @Controller - Controller
+  @Repository - DAO
+  @Service - Business
+  @Component - Non MVC
+@Aspect is not a stereotype annotation.
+To use the stereotypes we need to declare context namespace.
+<beans xmlns:context="....">
+  <context:component-scan base-package="com.eijaz.website" />
+</beans>
+IOC will automatically create objetcs of all the classes in the package specified which have stereotype annotations.
+
+<context:annotation-config /> - This will automatically configure bean post processor classes like (@Autowired) AutowiredAnnotationBPP or (@Required) RequiredAnnotationBPP or PreConstruct, PostDestory
+We need not declare those beans again.
+
+Part27:
+-------
+To inject static variables we need to use the helper class MethodInvokingFactoryBean
+Singleton class: Ensures that only one object need to create for entire main stack or main thread or per application.
+java.util.ResourceBundle is a singleton class to load properties used for internationalization.
+ResourceBundle rb =  ResouceBundle.getBundle("Messages");
+ResourceBundle rb1 =  ResouceBundle.getBundle("Messages");
+S.o.p(rb==rb1); -> True
+Singleton are useful when it has static content.
+Calendar c = Calendar.getInstance();
+these methods are called as Factory Methods which are static methods. (getBundle, getInstance)
+
+Part28:
+--------
+Spring can create objects even for singleton classes i.e classes that have a private constructor. But these clases like Calendar and ResourceBundle the private constructors
+will throw IllegalAccessException when the SF accesses the private constructor to create objects. so there is no way other than to access the factory methods to cretae objects.
+<beans>
+  <bean id="c" class="java.util.Calendar" factory-method="getInstance" /> //Will return calendar object
+</beans>
+
+Logger l = LoggerFactory.getLogger(this.class);
+Validator v = ValidatorFactory.getValidator();
+Session s = SessionFactory.openSession();
+
+<bean id="lf" class="loggerFactory" factory-method="getLogger" /> //Will return logger object
+
+<bean id='sf' class="SessionFactory" />
+<bean id="s" factory-bean="sf" factory-method="openSession" />
+This will create a session object
+
+//Creating a singleton class
+public class Test {
+  public static Test t;
+  private Test(){
+
+  }
+  public static Test getInstance(){
+    if(t==null)
+      t = new Test();
+
+    return t;
+  }
+}
+
+Part29:
+-------
+Spring 3.0 we can have combination of both Sterotypes and bean declarations in xml.
+
+Static variable DI:
+public class car {
+  private Static String name;
+  public static void setName(String name){
+    Car.name = name;
+  }
+
+public static void main(String args[]){
+  S.O.P(name);
+}
+}
+
+To inject static variable we need to use MethodInvokingFactoryBean
+setArguments(Object[] arguments)
+setStaticMethod(String staticMethod)
+
+<beans>
+  <bean id="c" class="Car" />
+
+  <bean class="MethodInvokingFactorBean">
+    <property name="staticMethod" value="beans.Car.setName" />
+    <property name="arguments">
+      <list>
+        <value>Audi</value>
+      </list>
+    </property>
+  </bean>
+
+</beans>
+
+Part30:
+-------
+FactoryClasses are used to hide the instantiation logi
+By returning instance into Interface references factories make client independent.
+
+Connection con = DriverManager.getConnection(.....);
+Oracle will have oracle implementation of connection interface.
+MySQL will have oracle implementation of connection interface.
+
+
+//Writing Static Factory example like Logger factory
+public interface Car{
+  public void drive();
+}
+
+public class CarFactory{
+  private static carName;
+  //static setter
+  //inject static value using DI
+  public static Car getCar(){
+    return (Car) Class.forName(carName).newInstance();
+  }
+}
+
+public Class Benz implements Car{
+  public void drive()
+  {
+    SOP("benz");
+  }
+}
+
+<beans>
+  <bean class="MethodInvokingFactoryBean">
+    <property name="staticMethod" value="packagename.CarFactory.setCarName" />
+    <property name="arguments">
+      <list>
+        <value>Benz</value>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="cf" class="CarFactory" factory-method="getCar" />
+</beans>
+
+public class Client{
+  PSVM(S ag[]){
+    APC ap = new CPXAC("spring.xml");
+    Car c = (Car) ap.getBean("cf");
+    c.drive();
+  }
+}
+
+//Non static factory or instance factory like SessionFactory
+car name will not be static then bean declaration will be like i.e use all non-static variables and methods
+
+<bean id="cf" class="CarFactory">
+  <property name="carName" value="Benz" />
+</bean>
+
+<bean id="c" factory-bean="cf" factory-method="getCar" />
+
+Part31/32:
+-----------
+//Writing Factory class using FactoryBean interface
+
+FactoryBean (I)
+  getObject: Object
+  getObjectType: Class
+  isSingleton: boolean
+
+interface Car{
+public void drive();
+}
+
+class CarFactory implements FactoryBean {
+public String carName;
+//Setter for carName
+
+public Object getObject() throws Exception {
+  Car c = (Car) Class.forName(carName).newInstance();
+  return c;
+}
+
+public Class getObjectType() throws Exception {
+  return Car.class;
+}
+
+public boolean isSingleton {
+  return true;
+}
+}
+
+Class Audi implements Car {
+  public void drive()
+  {
+  SOP("driving audi");
+  }
+}
+<bean id="cf" class="CarFactory">
+  <property name="carName" value="Audi"/>
+</bean>
+
+
+Part33:
+-------
+
+Part34:
+--------
+LifeCycle Methods.
+Programmatic Approach:
+  Implement InitializingBean(I) (afterPropertiesSet method)
+  Implement DisposableBean(I) (destroy method)
+
+XML Approach attributes in bean tag, these methods should be defined in the respective class:
+  init-method="InitMethodName"
+  destroy-method="DestroyMethodName"
+
+AnnotationApproach:
+  @PostConstruct
+    myinitMethod()
+
+  @PreDestroy
+    myDestroyMethod()
+
+Should implement this using IOC/ConfigurableApplicationContext to call the life cycle methods.
+Call the ConfigurableApplicationContext.close() method to call the destroy method.
+The implementation is same as ClassPathXMLApplicationContext just the interface is different.
+Destroy is called when the container is shutdown
+
+Part35:
+-------
+All bean objects are create by the IOC container when startup or loading the xml.
+All beans are destroyed/deleted from IOC container when shutdown or closed.
+We need to declare CommonAnnotationBeanPostProcessor to use @PreConstruct and PostDestroy or use context:annotations-config
+to use same init and destroy methods for all beans we can configure under root tag as default-init-method and default-destroy-method.
+
+Part36:
+-------
+DI can also be done by Lookup Method.
+Abstract methods are Lookup Methods.
+Overridden methods are also lookup methods.
+
+abstract class Car {
+   abstract public Engine myEngine();
+}
+
+<bean id="c" class="Car">
+  <lookup-method name="myEnginer" bean="e"/>
+</bean>
+
+<bean id="e" class="Engine" />
+
+Spring internally creates a proxyclass and overrides the abstract method and return the object that is injected.
+Class Carproxy extends Car {
+  @Override
+  public Enginer myEngine(){
+    return e;
+  }
+}
+
+Part33:
+-------
+We can use lookup method DI for abstract methods, interfaces and concrete classes as well.
+This will override existing implementations if any or provide implementations to methods.
+**cglib jar is needed to generate proxies , so add this to classpath
+i.e for interfaces and abstract classes also we can create objects by using lookup method DI, because spring will inject the dependency or proviide the implementation we gave for it.
+
+//Car is an interface having a method called myCarEngine which returns Engine object
+<bean id="c" class="Car">
+  <lookup-method name="myCarEngine" bean="e" />
+</bean>
+
+<bean id="e" class="Engine">
+  <property name="name" value="SwiftEngine" />
+</bean>
+
+//Bus is an abstract class having a method called myBusEngine which returns Engine object
+<bean id="b" class="Bus">
+  <lookup-method name="myBusEngine" bean="e1" />
+</bean>
+
+<bean id="e1" class="Engine">
+  <property name="name" value="BusEngine" />
+</bean>
+
+//Truck is a concrete class having a method called myTruckEngine which returns Engine object
+<bean id="t" class="Truck">
+  <lookup-method name="myTruckEngine" bean="e2" />
+</bean>
+
+<bean id="e2" class="Engine">
+  <property name="name" value="TruckEngine" />
+</bean>
+
+Part37:
+-------
+Method Replacer will replace the implementation of one class method with another class method.
+Class Bank{
+deposit(){
+}
+withdraw(){
+}
+calculateBalance(){
+SOP("balance here")
+}
+}
+
+Class NewBalance implements MethodReplacer {
+public object reimplement(Object o, Method arguments, object params[]){
+SOP("New balance calculation here");
+}
+}
+
+<bean id="b" class="Bank">
+  <replaced-method name="calcualteBalance" replacer="nb"/>
+</bean>
+
+<bean id="nb" class="NewBalance" />
+
+So now when we create an object of bank class and class calculateBalance the new implementation code will be called.
+This is also done through proxies.
+
+Part38:
+-------
+@Resource(By name) and @Inject(By Type) are a JDK annotation which is equivalant to spring's @Autowired.
+We can use @Qualifier along with @Inject to remove ambiguities.
+
+Part39:
+-------
+@Component - Plain bean
+@Controller - will provide Http objects
+@Repository - will provide transaction objects
+@Service - will provide security/transactions etc
+We need to declare context:component-scan and if we use @Required, @Autowired declare context:annotations-config
+@Named is same to that of component but is a JDK annotation.
+
+Part40:
+-------
+To load properties file we need to use PropertiesPlaceHolderConfigurer and set location of the properties file.
+This will save data to the IOC context.
+<bean id="dbclass" class="databaseclass">
+  <property name="driver" value="${driver}"/>
+  <property name="url" value="${url}"/>
+  <property name="uname" value="${uname}"/>
+  <property name="pwd" value="${pwd}"/>
+</bean>
+
+//This will load properties to IOC context
+<bean class="PropertiesPlaceHolderConfigurer">
+<property name="location" value="db.properties"/>
+</bean>
+
+Part41:
+-------
+I18N we can provide Language support for the application.(English/Hindi) - Internationalization (18 characters between I and N)
+L10N we can provide business support or validation support.($ or Rs and tax rates etc) - Localization(10 characters between L and N)
+ApplicationContext will provide support for I18N
+
+Locale loc = new Locale("te");
+//In java
+ResourceBundle rb = ResouceBundle.getBundle("Data",loc);
+//Spring
+ApplicationContext ap = new ClassPathXmlApplicationContext("spring.xml");
+String value = ap.getMessage("label1",null,loc);
+
+//id is mandatory for this predefined class
+<bean id="messageSource" class="ResourceBundleMessageSource">
+  <property name="basename" value="Data" />
+</bean>
+So the file will be Data_te.properties
+
+Part42:
+--------
+In the Data_te.properties file label1= unicode of the telugu string.
+Get browser language
+String lang = request.getHeader("accept-language");
+Locale locale = new Locale(lang);
+ApplicationContext ap = new ClassPathXmlApplicationContext("resource/spring.xml");
+String value = ap.getMessage("lable",null,locale);
+
+In Spring MVC just import taglib and use
+<%@taglib uri="" prefix="html" %>
+<html:message key="lable" />
+
+Part43:
+-------
+Event handlers generally used in stand alone applications.
+
+public class ContextStartEvent implement ApplicationListener<ContextStartedEvent> {
+//Override the method
+}
+public class ContextStopEvent implement ApplicationListener<ContextStoppedEvent> {
+//Override the method
+}
+public class ContextRefreshEvent implement ApplicationListener<ContextRefereshedEvent> {
+//Override the method
+}
+public class ContextCloseEvent implement ApplicationListener<ContextClosedEvent> {
+//Override the method
+}
+Use ConfigurableApplicationContext
+
+///------------------------------------------------------------------------------------------------------------------------------------------------------
+///------------------------------------------------------------------------------------------------------------------------------------------------------
+///------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Spring MVC:
+-------------
+Part 44:
+---------

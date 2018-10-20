@@ -1,0 +1,157 @@
+Spring Core Notes:
+------------------
+Add Spring distribution jars to the classpath
+Add commons logging jar to the classpath
+
+Dependency injection is to remove or decouple object dependencies from each other.
+BeanFactory is an interface
+XMLBeanFactory is the implementation for the BeanFactory interface which takes XML file as an input to lookup for beans.
+Pass a FileSystemResource("spring.xml") to the XMLBeanFactory.
+Create the spring.xml , add the XML tag and DTD for beans.
+Create a beans tag and add bean definitions to the xml
+Bean will have an id and class attributes
+The bean tag definition is blue print of the object
+use factory.getBean(idFromXML) will return the object of that bean, save it to the corresponding Type
+We can then call methods from that class.
+The BeanFactory will manage the lifecycle of the objects that will be created.
+
+ApplicationContext is also an interface.
+ClassPathXmlApplicationContext is the implementation of Application Context.
+Just pass the xml file to ClassPathXmlApplicationContext.
+Then just get bean using getBean.
+In the Spring.xml, we can write property tag for beans , this will assign values to the class properties after instantiating the objects.
+Setter injection: property has name and value attributes.
+Constructor injection: If we want to set the property of the class through constructor then  we can do it via constructor-arg and giving its value.
+We can have multiple constructor-args tags, and spring will automatically calls the corresponding constructor.
+We can specify an type attribute to constructor-args tag. (int, java.lang.String, etc)
+We can specify an index attribute to the constructor-args
+<bean id="triangle" class="com.abdul.khaliq">
+<constructor-args type="int" value="20" /> //If there are two constructors which accept one string and other int, use type to remove the ambiguity.
+<property name="" value=""/>
+</bean>
+Difference between BeanFactory and ApplicationContect
+Bean Factory:
+Bean instantiation/wiring
+Application Context:
+Bean instantiation/wiring
+Automatic BeanPostProcessor registration
+Automatic BeanFactoryPostProcessor registration
+Convenient MessageSource access (for i18n)
+ApplicationEvent publication
+
+If the property of a bean is referring to another object, say Triangle has a Point object reference, then we declare point bean definition first.
+then in the triangle  bean definition, we assign the point property to the reference of the point bean.
+<bean id="triangle" class="com.oracle.com">
+  <property name="pointA" ref="zeroPoint"/>
+</bean>
+
+We can also remove the ref of the property and define the bean inside the property tag itself (inner beans) and an id is also not required 
+for the inner bean as it will not or cannot be accessed by other beans.
+Using Aliases we can give different names for the same beans.
+<alias  name="triangle" alias="triangle-alias"/> (name is the id of the actual bean)
+We can use name attribute on the bean this is also another name for the bean. (id, name and alias refer to same  bean)
+Better to use ids, as xml validator will catch errors if any duplicates are defined.
+ref attribute can point to id, name or alias.
+if we want to restrict ref to id's we can use idref property inside property.
+<property name="pointA">
+<idref="zeroPoint"/>
+</property>
+
+We saw assigning objects of other class and primitive types, but We can assign List , set and Map values also to the properties using list and 
+ref tags.
+<property name="points">
+<list>
+<ref bean="point1"/>
+<ref bean="point2"/>
+<ref bean="point3"/>
+</list>
+</property>
+
+We can use autowiring by asking the spring framework to intelligently guess the references and assign the properties from the beans available.
+Using XMl, we can use autowire attribute to the bean tag and provide value as byName
+in this case the properties in the class have same name as that of bean names in xml.
+autowire byType will autowire the ONLY bean object available in xml to the property of the bean i.e member of the class.
+autowire=constructor will autowire properties by passing available bean types to the constructor .
+byType and constructor should have only one beans of that types that we are autowiring , if not ambiguity.
+
+The applicationContext creates beans when its initialized itself i.e when giving the spring.xml file as input.
+These beans are then served when a request is received, this is the default behaviour.
+Bean scopes: Singleton (one instance is created per spring container)-default behaviour
+Prototype: new bean created for every reference or request.
+
+Web aware Context bean scopes:
+Request: new bean per servlet request
+Session: new bean per session.
+Global session: New bean  per global HTTP session.(portlet context)
+
+scope attribute is specified on the bean tag.
+
+To get the springApplicationContext in other classes , those classes need to implement ApplicationContectAware to get hold of the 
+ApplicationContext object for that spring container.
+implement BeanNameAware to get the BeanName that is being called/executed.
+
+BeanDefinitionInheritance: We can inherit existing bean definitions to our beans using parent tag on the bean element.
+declare parentTriangle bean with only pointA property set.
+declare triangle1 bean with parent="parentTriangle" this will have pointA automatically set for triangle1
+We can override the pointA or we can use it, and aslo define new properties pointB and pointC
+We can also declare parentTriangle as abstract="true" in bean tag
+if parentTriangle has a list property, and triangle1 uses parent, so when triangle1 defines list property it  overrides the values
+but if we want to merge we can say merge="true" on the list tag
+<property name="points">
+<list merge="true">
+<ref bean="pointB"/>
+</list>
+</property>
+
+We need to close the applicationContext for desktop/SE applications. But for web applications the container takes care of it.
+to close application contect we need to use AbstractApplicationContext and not ApplicationContext
+Then call abstractApplicationContext.registerShutdownHook();
+When the main method ends, the application context is shutdown.
+
+To use init lifecycle methods of a bean, the bean needs to implement InitializingBean. The method afterPropertiesSet is called before 
+the code is executed and after the properties are set on that bean.
+To use destroy lifecycle method of a bean, the bean should implement DisposableBean, the destroy method is called before the bean is destroyed.
+
+Instead of implementing the beans for init and destroy, we can just declare methods for init and destory in the bean and specify the 
+configuration in spring.xml
+the bean tag in spring.xml has attributes init-method and destory-method which takes method names, this will call init and destory 
+methods for that bean.
+
+Write a new class and Implement BeanPostProcessor interface , This class is called before and after initialization of each and every bean 
+creation in the spring xml
+The above bean definition needs to be declared in the spring.xml
+
+Bean Factory post processor is even called before the beanfactory or application context is initialized
+Example: it can be used to substitute variable values from properties files so that the spring xml is ready for application context or bean factory
+org.springframework.beans.factory.config.PropertyPlaceholderConfigurer OOB BeanFactoryPostProcessor to replace the values from properties file to variables of a bean
+
+init-method destory-method for each bean individually
+declare on root beans tag level default-init-method and default-destory-method for the method to be called on all beans, the methods should be declared in each bean
+Implement Initializing bean and disposable bean interface for each bean , afterpropertiesset and destroy method can be implmented
+Implement BeanPostProcessor class , and this class will be called for all beans before init and after init
+BeanFactoryPostProcessor will be called before initialization if beanFactory or the ApplicationContext itself. 
+like PropertyConfigurer to replace value from properties to spring.xml
+Examples of beanpostprocessor are autowiredannotationbfpp, requiredannotationbfpp declare in springxml and annotate the variables in class
+Autowire will autowire by type , if more than 1 type then by name
+If more than one type is available we can use @Qualifiers
+JSR-250 annotations
+@Resource(name="") will autowire by name.
+@PostConstruct
+@PreDestroy
+Destory methods will be called only when we register a shutdown hook
+
+@Component will tell spring FW that a class is a bean (same as declaring bean in spring.xml)
+For the above to work we need to add component-scan in the spring.xml and the base-package , for the spring FW to scan the packages for 
+component annotations.
+Stereotype more specific annotations but same as components, @Service, @Controller, @Repositories
+
+ApplicationContext provides with ResourcebundleMessageSource to read the messages from a properties file, this is not present in BeanFactory
+context.getMessage("<propertyname>","<parameters>","default value","<locale>")
+OR
+messageSource.getMessage("<propertyname>","arry of objects : <parameters in message {0} and {1} >","default value","<locale>")
+
+Interfaces Event Publisher, Event listener and Class Event.
+implement Interface ApplicationListener will listen all events published in the spring FW
+Extend ApplicationEvent to write a event class.
+Declare ApplicationEventPublisher as a variable and call publish method by passing event object.
+To set the publisher variable we need the class which publishes the event to implement ApplicationEventPublisherAware, which will provide the publisher handle

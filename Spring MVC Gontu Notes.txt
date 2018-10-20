@@ -1,0 +1,126 @@
+MVC Guidelines
+Model - the data that is transferred in the application
+View is the UI that represent the Model/Data
+Controller - Controls the flow of execution in the application, typically calls some services which help in preparing the Model object which is then sent to the View for rendering.
+
+Spring MVC is a web application development framework based on MVC guidelines.
+
+Browser/EndUser makes a request
+FrontController (DispatcherServlet) takes the request
+FC Checks the HandlerMapping
+FC Calls the Controller which returns the Model
+FC Checks the view resolver
+FC Sends the data to the view
+
+Create a dynamic web project with spring jars.
+Add the spring-dispatcher-servlet(DispatcherServlet) to map to / in the web.xml
+Create a spring-dispatcher-servlet.xml in the web-inf and
+define the handlermapping bean (BeanNameUrlHandlerMapping) : say the url is  "/welcome.html"
+define the controller class with name ="/welcome.html", this class is called when the url is /welcome.html
+Each controller class should extend from some base controller class example: AbstractController.
+The controller will return a ModelandView object with the page/view name that is to be called.
+The controller can also add objects to the modelandview object with key value pairs.
+define the view resolver bean (InternalResourceViewResolver class)
+View resolver bean will have the suffix and prefix of the webpage that is being returned by the controller.
+Create the view page (jsp) and retrieve the Model objects set by controller. ${welcomeMessage}
+
+all the requests "/" is mapped to dispatcherServlet (FrontController)
+FC then checks handlerMapping to see which controller to call
+
+More than one requestMapping in the controller it is called as MultiAction Controller class.
+
+/test/{name}/{country}
+Add mvc-annotation-driven tag in spring.xml to use @PathVariable Map<String,String> variablename.
+variablename.get("name")
+variablename.get("country")
+
+@PathVariable
+@RequestParam : we can provide a default value when the param is missing.
+
+We can declare both @PathVariable and @RequestParam as Map<String,String> if there are more parameters.
+
+in Jax-Rs the request body is mapped automatically to the custom object, say message json is passed and that is automatically assigned to the method argument Message.
+
+@ModelAttribute("stud") Student stud;
+The request params name and id will automatically be assigned to the Student object and will be automatically available in jsp, need not even add it to modeandview explicitly.
+Make sure the names are same in class and jsp page form from which the automatic binding will happen.
+It can automatically map String, int, long, Data, List etc.
+This is called as automatic data binding.
+
+If we apply the @ModelAttribute to the method, the objects added to the model will be available to all view pages.
+This method is called before the actual method is called. This sets model data common across all jsp pages, like say header
+
+For automatic binding of custom data type inside model also, like Student has Address object.
+in the form use names as studentAddress.city, studentAddress.pincode i.e same names in both class and jsp form for automatic data binding.
+
+To catch all automatic binding related errors declare the BindingResult variable in the method signature and add the code to return the same page if result has errors
+public ModelAndView submitForm(@ModelAttribute("student1") Student student, BindingResult result){
+
+
+  if(result.hasErrors()){
+  ModelAndView model = new ModelAndView("AdmissionForm");
+  return model;
+  }
+
+  //No errors code
+}
+
+Also add a tag lib to admission form and write a tag form:errors to show the error message on the page.
+This will return back the same admission form page with error on top but the data is not auto populated for the fields.
+
+To skip automatic databinding for a specific element then we need to use @InitBinder and WebDataBinder.
+declare any method and annotate it with @InitBinder and method argument as WebDataBinder binder. then say
+binder.setDisallowedFields(new String[] {"studentMobile"});
+
+We can also register custom editors to the binder say date format. called as property editors, there are many property editors which we can use based on our requirement.
+We can also write custom property editors by extending PropertyEditorSupport class and override setAsText method.
+
+If we want to restrict name between 10 and 30 characters then we can use
+@Size(min=10, max=30, message="error message here....{min} and {max}") on the variable name in the Model class.
+But we also need to specify @Valid where we use @ModelAttribute in the method signature.
+If we use @Valid then it considers size, other validation tags or else it will not consider.
+These are JSR 303/349 these are external libraries like hibernate validator library etc
+
+We can also get the error messages from an external properties file.
+declare a bean messagesource with class ReloadableResourceBundlemessagesource
+and property basename with value = location of the file
+in message file use format
+AnnotationName.objectreferencename.FieldName = value
+Size.student1.studentHobby
+or
+Size.studentHobby
+or
+Size.String
+or
+Size
+or
+default from SF
+
+
+place holders in property file {0} is automatically replace with property name
+
+We can use @Pattern annotation with some regular expressionon the field name, to control what can be part of the field value.
+@Past this will restrict the date to past date only. like DOB., or else will return binding error.
+@Max(2222) will restrict the int field value to max of 2222
+@Future
+@Min
+@NotNull
+@NotEmpty
+
+To write a interceptor class extend it from HandlerInterceptorAdapter class and override preHandle method.
+return true from the method to proceed or return false to stop processing..
+Add this bean entry class to the spring.xml in the mvc:interceptor inside mvc:interceptors tag.
+We can add bean and the mvc:mapping for which the interceptor should be applied
+leaving the mapping tag will apply to all urls.
+
+we can also override postHandle and afterCompletion methods.
+
+To handle exceptions create a method and annotate with @ExceptionHandler(value="NullPointerException.class") and return a string with view name.
+
+To create Global exception handlers create a class and mark it with @ControllerAdvice and have methods annotated with @ExceptionHandlers
+We can do it in spring.xml also by defining a bean of SF SimpleMappingExceptionResolver and specify the property with a map of entries with key and value as
+exceptioname and view name
+we can define a property defaultErrorview also with default view page for all other exceptions not defined in map
+
+All @exceptionhandlers will by default return 200ok to change the response status use
+@ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)

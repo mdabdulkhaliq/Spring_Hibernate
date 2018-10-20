@@ -1,0 +1,103 @@
+Spring Data Support
+JDBC Module
+ORM Module
+
+General JDBC without spring
+-------------------------------
+Load Driver: Class.forName(driver).newInstance()
+DriverManager.getConnection(connectionString)
+connection.PreparedStatement/CallableStatement(Procedures)
+Set values to prepared Statement
+ResultSet = PreparedStatement.executeQuery
+if rs.next
+create object and assign rs.getString("")
+return object;
+
+Loading the driver and establishing a connection will be required by all DAO objects hence can be moved to configuration, Spring does that OOB
+<bean id="datasource" class="org.sf.jdbc.datsource.DriverManagerDataSource">
+give 2 properties driverClassName and url
+</beans>
+declare a datasource variable in class and autowire it.
+We can use external datasource providers also like dbcp.BasicDataSource from apache for connection pooling etc, just change the class in bean tag
+Set the datasoruce to JDBCTemplate
+Any query that returns an interger we can use "queryForInt" method of JDBCTemplate
+JDBCTemplate takes care of all the code that is common across all DAO objects , like loading driver, createing connection, createing statement, parsing resultset, exception handling etc.
+Declare the JDBCTemplate from spring core paackage and set the datasource property in springxml and then autowire a variable of jbctemplate in the DAO class
+
+int count = jdbcTemplate.queryForInt(sql);
+queryForLong
+queryForList
+jdbcTemplate.queryForObject(sql, String.class);
+if there are parameters in sql  = select name from circle where circleId = ?
+then jdbcTemplate.queryForObject(sql, new Object[] {circleId}, String.class)
+
+To get custom object say Circle
+sql  = select * from circle where circleId = ?
+jdbcTemplate.queryForObject(sql, new Object[] {circleId}, new CircleMapper() )
+RowMapper class is used to map the output of result set to the custom object.
+
+Create a inner class and implement RowMapper<T>
+read the result set and assign it to custom object variables. This will will applied to all rows return from the query.
+
+to get a List of objects use
+jdbcTemplate.query(sql, args, rowmapper);
+
+private static final class CircleMapper implements RowMapper<Circle>{
+write the below code in the overridden method
+Circle circle = new Circle();
+circle.setId(resultset.getInt(id))
+circle.setName(rs.getString(Name))
+return circle;
+}
+
+To insert a circle object
+jdbcTempalte.update(sql, new Object[] {circle.getid, circle.getname})
+update can be used to run stored procedures, delete and update as well.
+
+.execute can be used to run DDL statements.
+
+JDBCTemplate is one of the support classes provided by spring.
+Limitation is we can only have ?,? cannot have named parameters.
+i.e ?,? order should be same when substituting
+where can name parameters can have any order when substituting.
+
+NamedParameterJDBCTemplate extended from JDBCTemplate
+Declared and initialized same as that of jdbctemplate.
+String sql = "insert into circle (id, name) values(:id, :name)";
+SqlParameterSource namedParameters = MapSqlParametersSource("id",circle.getId()).addValue("name", circle.getName());
+namedParameterJdbcTempalte.update(sql, namedParameters);
+
+SimpleJDBCTemplate can use both namedparameters and normal ?,?
+
+Spring provides JDBCDAOSupport classes that has declaration of the jdbc templates and intialized it with datasource.
+jdbcDaoSupport
+namedParameterDAOSupport
+simpleDAOSupport
+
+just extend our dao class with the above support class and use the get....Template method to get the readymade template.
+declare our dao class bean and set the datasource property with datasource bean reference from xml. - > SpringXML
+The support class will use this datasource to set the jdbctemplate with it.
+Since our class is extending support class we will have readymade template.
+
+advantage is just removes the declarations of the tempaltes and its assignment.
+we just need to set the datasource property and extend the support class.
+The support class will use this datasource and create the template for us.
+This is helpful when we have multiple dao's and need not write the same code everywhere.
+
+using hibernate with spring
+SessionFactory of hibernate is a singleton bean.
+we can use the spring.xml itself to configure hibernate, no need of seperate hibernate.cfg.xml
+
+we declare the sessionfactory bean in the xml and get it in the dao class,
+Spring provides support classes for hibernate session factory , we can use that. (org.sf.orm.hibernate3.annotation.AnnotationSessionFactory)
+In the Spring XML , set the datasource property to the sessionfactory bean
+set the property name="packagesToScan" value="packagename" to check for hibernate annotations i.e @Entity, @Id etc
+set the property name=hibernateproperties with the below property as nested props/prop to dialect property , example derbydialect in the hibernate properties
+
+Mark the classes/Models with @Entity and @Id annotations
+Get a session from the session factory.
+
+declare the sessionfactory object in the DAO, mark as autowire.
+Query query = getSessionFactory().openSession().createQuery(sql);
+query.uniqueResult();
+Mark the dao as @Repository

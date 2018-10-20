@@ -1,0 +1,97 @@
+Spring AOP:
+
+Classes tightly coupled to cross cutting concerns or the common aspect like logging (Logger class).
+Need not be invoked specifically inside the code, no need to write code inside class.
+Automatically called aspects based on expressions,  for methods in the classes which can be configured.
+We can configure aspect to run before or after.
+Steps: Identify aspects, configure where to apply.
+
+Advice is the standard terminology for a cross cutting concern.
+@Aspect makes the class an aspect. but it still needs to be declared in spring.xml as a bean, or else @Component
+To use @Aspect declare aspectj-autoproxy tag in spring.xml
+
+Mark the advice or the method with @Before to run before
+@Before("execution(public String getName())") - Runs before execution of all the methods with the signature for all classes
+@Before("execution(public String com.oracle.commerce.TestClass.getName())") - Applies only to class TestClass with this signature
+@Before("execution(public String com.oracle.commerce.TestClass.getName())")
+@Before("execution(public * get*())") - Wild cards, any return type, any method name starting with get
+@Before("execution(public * get*(*))") - 1 or more argument
+@Before("execution(public * get*(..))") - 0 or more argument
+
+We can use Pointcut it is the expression, which can be used by any number of methods. Need not write expression at all places , just use pointcut
+Allows us to write the expression only once.
+
+@Pointcut("execution(public * get*(..))")
+public void allGetters(){}
+then use it as
+@Before("allGetters()")
+
+@Pointcut("execution(* * com.oracle.com.MyClass.*(..))") - applies to all methods of Myclass
+public void allCircleMethods(){}
+OR
+@Pointcut("within(com.oracle.com.MyClass)")
+public void allCircleMethods(){}
+
+@Pointcut("within(com.oracle.com.*)") - applies to all methods of all classes of all packages inside it.
+public void allCircleMethods(){}
+
+Execution we are writing about method names, and within we are writing about classes, packages
+
+We can combine pointcut expressions
+@Before("allGetters() && allCircleMethods()") - All getters for cirlce
+
+JoinPoint will have the details of the actual method that called the advice.
+joinPoint.getTarget will give the object reference of the object that triggered the advice.
+Joinpoint is nothing but all places/methods where an advice can be run.
+
+@Before("args(String)") - all methods that takes string arguments
+If we want the value of the String declare as
+@Before("args(name)")
+public void method(String name){
+sysout(name);
+}
+
+The advice is called when it matches a condition programatically, will not apply during initialization of spring container.
+
+@After("args(String)")  - calls after the method has run, which takes one String parameter., runs in all cases even success or failure of method execution.
+@AfterReturning("args(String)") - Will execute only when success
+@AfterThrowing("args(String)") - Runs when throws an exception from the method.
+We can also capture the returned value or returned exception
+@AfterReturning(pointcut="args(name)", returning="returnValue")
+public void method(String name, String returnValue){
+use the values here.
+}
+Similarly
+@AfterThrowing(pointcut="args(String)", throwing="ex")
+public void method(RuntimeException ex){
+}
+
+@Around("allGetters()") , the method needs to take a compulsory argument ProceedingJoinPoint
+public void method(ProceedingJoinPoint pJP){
+  //Code before actual method executes
+  proceedingJoinPoint.proceed(); - Target method execution
+  //Code after actual method executes
+}
+
+We can control whether the target methods needs to be called or not, which we will not have if we use @before and @after
+
+Custom Advice annotation, Create a annotation class, and declare around as
+@Around("@annotation(com.oracle.commerce.Eijaz)")
+Now just mark the methods of any class with @Eijaz and the above around advice will be applied to it.
+
+SPRING XML Configuration
+--------------------------
+Declare bean in spring xml or @Component
+To make that class aspect use @Aspect OR
+<aop:config>
+  <aop:aspect id="" ref="declared bean name from xml">
+    <aop:pointcut id="allGetters" expression="execution(* get*())"/ >
+    <aop:around pointcut-ref="allGetters" method="methodName" />
+  </aop:aspect>
+</aop:config>
+To use aop annotations use aspectj-autoproxy tag.
+
+How AOp Proxies work:
+Whenever we request for an instance of an object and then call method on it, Spring actually creates a new proxy class which extens the object class that is called.
+And then override the methods. In the overriden methods it calls the super/parent class method , but now we have control over what to be done before and after the method executes
+So in this way the advice is run before or after the method executes.

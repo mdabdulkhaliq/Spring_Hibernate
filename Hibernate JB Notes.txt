@@ -1,0 +1,160 @@
+SessionFactory
+openSession
+	createQuery
+beginTransaction
+save
+update
+delete
+get
+getTransaction.commit
+
+@Entity
+@Table
+@Id
+@GeneratedValue
+
+@Embeddable
+@Embedded
+@AttributeOverrides
+@AttributeOverride
+
+The collection table will have a new column with reference to actual entity's id.
+@ElementCollection
+@JoinTable
+@JoinColumn
+@GenericGenerator
+@CollectionId
+
+@OneToOne , The main table has the reference id of second table
+@OneToMany There are 3 tables, 3rd table holds entires of ids from both tables.
+@ManyToOne reverse of @OneToMany , User can have multiple vehicles, multiple vehicles can be mapped to one user.
+Use both onetomany and manytoone on classes to have bidirectional relationships.
+use mappedBy attribute in OnetoMany of 1st entity and specify join column in the 2nd entity near ManytoOne
+This will not create third table. 	
+User can have multiple vehicles, but one vehicle can have only one user.
+@ManyToMany should have third table no other option.
+We get 2 tables for mapping which is redundant.
+use mappedBy to avoid this.
+
+Skip if user is not found for Vehicle in case of ManytoOne
+@NotFound(action=NotFoundAction.IGNORE)
+
+@OneToMany (cascade = CascadeType.PERSIST)
+Vehicles need not be saved, just user can be saved and vehicles will be saved automatically.
+
+For Inheritance a single table will be created by default with columns of parent class and all child classes. 
+Also a column with DTYPE containing class type, called discriminator.
+DEFAULT behaviour SINGLE TABLE even without @Inheritance
+@Inheritance(strategy=InheritanceType.SINGLE_TABLE OR JOINED OR TABLE_PER_CLASS)
+
+to change the DTYPE column name use
+@DiscriminatorColumn(name="VEHICLE_TYPE", discriminatorType=DiscriminatorType.STRING)
+The value of DTYPE is classname i.e Vehicle, TwoWheeler or FourWheeler to change that annotate child classes with
+@DiscriminatorValue("Bike") for class TwoWheeler 
+This is useful only when we have single table strategy
+
+For TABLE_PER_CLASS inheritance
+it has seperate tables for parent and childs and all childs will have all the attributes of the parent class as columns along with its own properties
+The child classes will also inherit @Id from parent.
+
+JOINED inheritance
+parent table will have all the inherited properties data for parent and child in the same table as the column name is same 
+Child table will only have their own extra attributes as columns and reference of parent table id
+
+Transient object before handing over to hibernate session
+Persistent object after handing over to hibernate session, the session keeps tracking the object as long as it is in the session
+Detached object is a persisted object outside the hibernate session.
+
+If we make changes to the detached object and then pass it over to hibernate session, it becomes persistant object again.
+If we run a update on detached object without making any changes, it will run the update query even if there are no changes.
+To avoid this we can use
+@org.annotatoins.hibernate.Entity(selectBeforeUpdate=true)
+This will make sure to update only if the object is changed.
+
+HQL:
+Query query = session.createQuery("from ObjectName/EntityName where propertyName = ... ");
+List<UserDetails> names = query.list();
+
+Pagination:
+query.setResult(5); it will return from 5th record in the result.
+query.setMaxResults(4); - No of records needed.
+
+Query query = session.createQuery("select userName from UserDetails");
+List<String> names = query.list();
+
+select userId, userName.... will return List of Lists which will have userid and userName
+select new map(userId,userName) from UserDetails will return list of Map with user id and username
+
+SQLInjection will happen if we dont use parameter binding (?) and use sqlString + variableInput;
+
+Query query = session.createQuery("from ObjectName/EntityName where propertyName = ?");
+query.setInteger(0, value);
+
+Query query = session.createQuery("from ObjectName/EntityName where userId= :userId");
+query.setInteger("userId" , value);
+
+We can write named queries in the entity , all queries possibily required for that Entity.
+@NamedQuery(name="UserDetails.byId", query="from UserDetails where userId = ?");
+
+Query query = Session.getNamedQuery("UserDetails.byId");
+query.setInteger(0, value);
+
+To write SQL Queries inside the named query use
+@NamedNativeQuery(name="UserDetails.byName", query="select * from user_details where user_name= ? ", resultClass="UserDetails.class");
+Query query = Session.getNamedQuery("UserDetails.byName");
+query.setInteger(0, value);
+we need to specify the resultClass because it is a sql query and hibernate does not know which entity to map the values to.
+If we use HQL it know which entity we are dealing with.
+
+HQL is difficult to maintain if query is complex
+Criteria is more like a where clause: Create a criteria , specify the entity we are working with and then add restrictions to it.
+
+Criteria c = session.createCriteria(UserDetails.class); 
+if we dont add below restrictions it will return all results.
+c.add(Restrictions.eq("userName" , "User 10"))
+ .add(....)
+ .add(...);
+c.list();
+
+Restrictions are all by default AND.
+Restrictions has all operators
+
+If we want OR
+criteria.add(Restrictions.or(restriction1, restriction 2));
+
+If we want criteria to return only one column
+Criteria c = session.createCriteria(UserDetails.class)
+		.setProjection(Projections.property("userId"));
+
+for Ordering
+.addOrder(Order.asec/desc);
+
+We can also use Projects.count / max / min etc 
+
+Query By Example:
+Create an object and set values to ojb what we want from db;
+Example ex = Example.create(exampleUser);
+Criteria c = session.createCriteria(UserDetails.class)
+		.add(example);
+.excludeProperty(...);
+.enableLike();
+
+by deafult it will not consider null properties and id properties for comparision.
+
+If we select an object in a session its persistant and hibernate tracks it.
+If we open a new session and select the same object, hibernate again queries db, even if there is no change.
+We can avoid this using second level cache
+This will track objects at second level cache and will be shared across sessions, applications or clusters.
+
+To enable use EhCacheProvider, import libs, and set cache.use_second_level_cache property to true.
+and Mark the entity as 
+@Cacheable
+@Cache(usage=CacheConcurrencyStrategy=READ_ONLY OR READ_WRITE OR NOSTRICT_READ_WRITE or TRANSACTIONAL)
+Unless the entity is explicity marked with above two annotations it will not use second level cache.
+
+This is applied only to session.get , if we select using query session.createQuery("....");
+this will run 2 selects
+so in order this also to work with single select we set cache.set_query_cache to true in xml.
+and also s
+query.setCacheable(true); in both sessions
+then it will cache this query in second level cache
