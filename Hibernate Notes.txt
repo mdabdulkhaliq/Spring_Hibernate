@@ -1,0 +1,38 @@
+Hibernate is 
+1. an ORM Tool.
+2. Used in data layer of the applications.
+3. Implements JPA (Java Persistent API, set of standards)
+
+The problem in typical JDBC
+1. Map member variables of the class to the columns of the table.
+2. Mapping Relationships (if the User class has a member of Address class, all the mappings from class to tables have to be done manually)
+3. Handling data types. (No boolean in database, but in java, so these conversions have to be handled manually)
+4. Managing changes to the object state, if a specific value of the object is changed, we need to again write code to change that value in database alone.
+
+Object (Java), Relational (Database) Mapping, hence the name ORM.
+
+Saving without Hibernate:
+1. JDBC Database Configuration
+2. Model Object
+3. Service method to create the model object
+4. Database design (to have a table to hold the object details)
+5. DAO method to save the object using SQL queries.
+
+Hibernate Way to save an object:
+1. JDBC Database configuration - Hibernate Configuration.
+2. Model Object - Annotations
+3. Service method to create the model object , use the hibernate API
+4. Database design - not needed.
+5. DAO method to save the object using SQl queries - Not needed , hibernate takes care of generating the queries and saving, etc.
+
+Using Hibernate API:
+1. Create a Session Factory - only one session factory per application
+2. Create sessions from Session Factory
+3. USe the session to save the model objects.
+
+Inheritance:
+If say we have a base class Vehicle with properties vehicleId and VehicleName and 2 sub classes with inherit from the Vehicle,
+TwoWheelerVehicle with property steeringHandle and FourWheelerVehicle with property steeringWheel and all the classes are marked with
+Entities , then by default hibernate will create a SINGLE Table strategy with values of the base class and the values of the subclasses (inheritanceTable.jpg)
+DType column is the discriminator type which identifies the type of the class for the record in the DB
+This is equivalent to having @Inhertiance(strategy=InheritanceType.SINGLE_TABLE) on the Vehicle class by default
